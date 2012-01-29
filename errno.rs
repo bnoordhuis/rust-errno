@@ -20,6 +20,8 @@
        vers = "1.0",
        author = "Ben Noordhuis <info@bnoordhuis.nl>")];
 
+use std; // required by the tests
+
 import size_t = ctypes::size_t;
 import c_int = ctypes::c_int;
 import sbuf = str::sbuf;
@@ -53,12 +55,12 @@ fn strerror(errnum: int) -> str {
 #[test]
 fn test() {
   // FIXME chokes on localized messages
-  assert errno::strerror(22) == "Invalid argument";
-  assert errno::strerror(0) == "Success";
+  assert strerror(22) == "Invalid argument";
+  assert strerror(0) == "Success";
 }
 
 #[should_fail]
 #[test]
 fn test2() {
-  errno::strerror(-1);
+  strerror(-1);
 }
