@@ -22,13 +22,11 @@
 
 use std; // required by the tests
 
-import size_t = ctypes::size_t;
-import c_int = ctypes::c_int;
-import sbuf = str::sbuf;
+import libc::{size_t, c_int};
 
 #[nolink]
 native mod __glibc {
-  fn __xpg_strerror_r(errnum: c_int, buf: *mutable u8, len: size_t) -> c_int;
+  fn __xpg_strerror_r(errnum: c_int, buf: *libc::c_char, len: size_t) -> c_int;
   fn __errno_location() -> *c_int;
 }
 
@@ -37,18 +35,18 @@ fn errno() -> int {
 }
 
 fn strerror(errnum: int) -> str {
-  let bufv = vec::init_elt_mut(1024u, 0u8);
-  let buf = ptr::mut_addr_of(bufv[0]);
+  let bufv = vec::from_elem(1024u, 0u8);
   let len = vec::len(bufv);
 
   unsafe {
-    let r = __glibc::__xpg_strerror_r(errnum as c_int, buf, len as size_t);
+    let buf : *libc::c_char = ::unsafe::reinterpret_cast(bufv);
+    let r =__glibc::__xpg_strerror_r(errnum as c_int, buf, len as size_t);
 
     if (r as bool) {
       fail #fmt("__glibc::__xpg_strerror_r() failed [errno=%d]", errno());
     }
 
-    ret str::from_cstr(buf as sbuf);
+    str::unsafe::from_c_str(buf)
   }
 }
 
